@@ -1,0 +1,32 @@
+version: "3"
+services:
+  db:
+    image: mysql:5.7
+    networks:
+      - net-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_PASSWORD=admin
+      - MYSQL_DATABASE=dostavim
+    ports:
+      - 3306:3306
+    restart: always
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./scripts/CREATE.sql:/docker-entrypoint-initdb.d/initdb.sql
+#    volumes:
+#      - ./scripts/CREATE.sql:/docker-entrypoint-initdb.d/initdb.sql
+
+  web-app:
+    build: ./DostavimVse
+    ports:
+      - 80:8080
+    networks:
+      - net-db
+    depends_on:
+      - db
+    restart: always
+    entrypoint: ["./wait-for-it.sh", "db:3306", "-t", "120", "--", "java", "-jar", "target/dostavimvse-0.0.1-SNAPSHOT.jar"]
+
+networks:
+  net-db:
